@@ -120,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
             }
             else {
                 if (button.isSelected()) {
+                    if (i < currentMoveToIndex) return;
                     selectedLeftButton = i;
                 }
             }
@@ -138,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
             }
             else {
                 if (button.isSelected()) {
+                    if (i < currentMoveToIndex) return;
                     selectedRightButton = i;
                 }
             }
@@ -164,6 +166,23 @@ public class MainActivity extends AppCompatActivity {
         return animator;
     }
 
+    private ObjectAnimator makeAnimatorToTurnButtonToItsPlace(final Button b, int place) {
+        final RelativeLayout.LayoutParams flp = (RelativeLayout.LayoutParams) b.getLayoutParams();
+        final int srcValue = flp.topMargin;
+        final int dstValue = buttonTopMarginByItsPlace(place);
+        ObjectAnimator animator = ObjectAnimator.ofInt(b, "topMargin", srcValue, dstValue);
+        animator.setDuration(1000);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                flp.topMargin = (Integer) valueAnimator.getAnimatedValue();
+                b.setLayoutParams(flp);
+            }
+        });
+        return animator;
+    }
+
     private void checkConnection() {
         if (selectedLeftButton != -1 && selectedRightButton != -1) {
             leftButtons[selectedLeftButton].setBackgroundResource(R.drawable.button_locked);
@@ -175,18 +194,18 @@ public class MainActivity extends AppCompatActivity {
 
             //Animate left button to new position if needed
             if (selectedLeftButton != currentMoveToIndex) {
-                animators.add(makeAnimatorToSwapButtons(leftButtons, selectedLeftButton, currentMoveToIndex));
+                //animators.add(makeAnimatorToSwapButtons(leftButtons, selectedLeftButton, currentMoveToIndex));
 
-                //leftButtons[selectedLeftButton] = null;
-                /*
-                for (int i = ButtonsCount-1; i>0; i--) {
-                    if (leftButtons[i] == null) {
-                        Button buttonToMove1 = leftButtons[selectedLeftButton];
-                        Button button_newCoordsSource1 = leftButtons[currentMoveToIndex];
-                        animators.add(makeAnimatorToSwapButtons(buttonToMove1, button_newCoordsSource1));
-                    }
-                }*/
-                //leftButtons[currentMoveToIndex] = leftButtons;
+                Button currentButtonAtLockedPlace = leftButtons[currentMoveToIndex];
+                leftButtons[currentMoveToIndex] = leftButtons[selectedLeftButton];
+                for (int i = selectedLeftButton; i>currentMoveToIndex; i--) {
+                    leftButtons[i] = leftButtons[i-1];
+                }
+                leftButtons[currentMoveToIndex+1]=currentButtonAtLockedPlace;
+
+                for (int i = 0; i < ButtonsCount; i++) {
+                    animators.add(makeAnimatorToTurnButtonToItsPlace(leftButtons[i], i));
+                }
             }
             else {
                 //only alpha animation / animation switch would be here.
@@ -194,7 +213,19 @@ public class MainActivity extends AppCompatActivity {
 
             //Animate right button to new position if needed
             if (selectedRightButton != currentMoveToIndex) {
-                animators.add(makeAnimatorToSwapButtons(rightButtons, selectedRightButton, currentMoveToIndex));
+                //animators.add(makeAnimatorToSwapButtons(rightButtons, selectedRightButton, currentMoveToIndex));
+                Button currentButtonAtLockedPlace = rightButtons[currentMoveToIndex];
+                rightButtons[currentMoveToIndex] = rightButtons[selectedRightButton];
+                for (int i = selectedRightButton; i>currentMoveToIndex; i--) {
+                    rightButtons[i] = rightButtons[i-1];
+                }
+                rightButtons[currentMoveToIndex+1]=currentButtonAtLockedPlace;
+
+                for (int i = 0; i < ButtonsCount; i++) {
+                    Animator anim = makeAnimatorToTurnButtonToItsPlace(rightButtons[i], i);
+                    anim.setStartDelay(300);
+                    animators.add(anim);
+                }
             }
             else {
                 //only alpha animation / animation switch would be here.
