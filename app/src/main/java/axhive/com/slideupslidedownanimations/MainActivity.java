@@ -33,8 +33,20 @@ public class MainActivity extends AppCompatActivity {
     private int selectedLeftButton = -1;
     private int selectedRightButton = -1;
 
-    final Button[] leftButtons = new Button[4];
-    final Button[] rightButtons = new Button[4];
+    final int ButtonsCount = 4;
+    final Button[] leftButtons = new Button[ButtonsCount];
+    final Button[] rightButtons = new Button[ButtonsCount];
+
+    float dp;
+
+    int ButtonHeight;
+    int SpaceBetween;
+    int LeftButtonWidth;
+    int RightButtonWidth;
+
+    private int buttonTopMarginByItsPlace(int placeNumber) {
+        return ((layout.getHeight() - (ButtonHeight * ButtonsCount + SpaceBetween * (ButtonsCount-1))) / 2) + (placeNumber * (ButtonHeight + SpaceBetween));
+    }
 
     private RelativeLayout layout;
     @Override
@@ -43,26 +55,23 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         layout = (RelativeLayout) findViewById(R.id.mainRelLayout);
 
-        final float dp = this.getResources().getDisplayMetrics().density;
-
-        final int ButtonHeight = 50 * (int)dp;
-        final int SpaceBetween = 10 * (int)dp;
-        final int LeftButtonWidth = 100 * (int)dp;
-        final int RightButtonWidth = 200 * (int)dp;
-
-
-
+        dp = this.getResources().getDisplayMetrics().density;
+        ButtonHeight = 50 * (int)dp;
+        SpaceBetween = 10 * (int)dp;
+        LeftButtonWidth = 100 * (int)dp;
+        RightButtonWidth = 200 * (int)dp;
 
         layout.post(new Runnable() {
             @Override
             public void run() {
-                for (int i = 0; i < 4; i++) {
+                for (int i = 0; i < ButtonsCount; i++) {
                     Button btn = new Button(mainActivityPointer());
                     btn.setText(String.valueOf(i));
                     RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
                             RelativeLayout.LayoutParams.WRAP_CONTENT);
 
-                    int top = ((layout.getHeight() - (ButtonHeight * 4 + SpaceBetween * 3)) / 2) + (i * (ButtonHeight + SpaceBetween));
+                    int top = buttonTopMarginByItsPlace(i);
+
                     params.topMargin = top;
                     params.height = ButtonHeight;
                     params.leftMargin = 10 * (int)dp;
@@ -137,6 +146,24 @@ public class MainActivity extends AppCompatActivity {
         checkConnection();
     }
 
+    private ObjectAnimator makeAnimatorToSwapButtons(Button[] arraySrc, int indexToAnimate, int targetIndex) {
+        final Button buttonToMove = arraySrc[indexToAnimate];
+        final RelativeLayout.LayoutParams btnToMoveLP = (RelativeLayout.LayoutParams)buttonToMove.getLayoutParams();
+        final int srcValue = buttonTopMarginByItsPlace(indexToAnimate);
+        final int dstValue = buttonTopMarginByItsPlace(targetIndex);
+        ObjectAnimator animator = ObjectAnimator.ofInt(buttonToMove, "topMargin", srcValue, dstValue);
+        animator.setDuration(1000);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                btnToMoveLP.topMargin = (Integer) valueAnimator.getAnimatedValue();
+                buttonToMove.setLayoutParams(btnToMoveLP);
+            }
+        });
+        return animator;
+    }
+
     private void checkConnection() {
         if (selectedLeftButton != -1 && selectedRightButton != -1) {
             leftButtons[selectedLeftButton].setBackgroundResource(R.drawable.button_locked);
@@ -148,25 +175,18 @@ public class MainActivity extends AppCompatActivity {
 
             //Animate left button to new position if needed
             if (selectedLeftButton != currentMoveToIndex) {
-                final Button buttonToMove = leftButtons[selectedLeftButton];
-                final Button button_newCoordsSource = leftButtons[currentMoveToIndex];
-                final RelativeLayout.LayoutParams btnToMoveLP = (RelativeLayout.LayoutParams)buttonToMove.getLayoutParams();
-                final RelativeLayout.LayoutParams btnCoordsSrcLP = (RelativeLayout.LayoutParams)button_newCoordsSource.getLayoutParams();
-                final int srcValue = btnToMoveLP.topMargin;
-                final int dstValue = btnCoordsSrcLP.topMargin;
-                ObjectAnimator animator = ObjectAnimator.ofInt(buttonToMove, "topMargin", srcValue, dstValue);
-                animator.setDuration(1000);
-                animator.setInterpolator(new DecelerateInterpolator());
-                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                        btnToMoveLP.topMargin = (Integer) valueAnimator.getAnimatedValue();
-                        buttonToMove.setLayoutParams(btnToMoveLP);
+                animators.add(makeAnimatorToSwapButtons(leftButtons, selectedLeftButton, currentMoveToIndex));
+
+                //leftButtons[selectedLeftButton] = null;
+                /*
+                for (int i = ButtonsCount-1; i>0; i--) {
+                    if (leftButtons[i] == null) {
+                        Button buttonToMove1 = leftButtons[selectedLeftButton];
+                        Button button_newCoordsSource1 = leftButtons[currentMoveToIndex];
+                        animators.add(makeAnimatorToSwapButtons(buttonToMove1, button_newCoordsSource1));
                     }
-                });
-                animators.add(animator);
-
-
+                }*/
+                //leftButtons[currentMoveToIndex] = leftButtons;
             }
             else {
                 //only alpha animation / animation switch would be here.
@@ -174,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
 
             //Animate right button to new position if needed
             if (selectedRightButton != currentMoveToIndex) {
-
+                animators.add(makeAnimatorToSwapButtons(rightButtons, selectedRightButton, currentMoveToIndex));
             }
             else {
                 //only alpha animation / animation switch would be here.
