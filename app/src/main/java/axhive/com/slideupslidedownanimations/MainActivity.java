@@ -3,6 +3,7 @@ package axhive.com.slideupslidedownanimations;
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -139,15 +141,50 @@ public class MainActivity extends AppCompatActivity {
         if (selectedLeftButton != -1 && selectedRightButton != -1) {
             leftButtons[selectedLeftButton].setBackgroundResource(R.drawable.button_locked);
             rightButtons[selectedRightButton].setBackgroundResource(R.drawable.button_locked);
-            selectedLeftButton = selectedRightButton = -1;
+
 
             Collection<Animator> animators = new ArrayList<>();
             AnimatorSet animSet = new AnimatorSet();
 
-            ObjectAnimator obja = new ObjectAnimator();
-            ObjectAnimator objb = new ObjectAnimator();
+            //Animate left button to new position if needed
+            if (selectedLeftButton != currentMoveToIndex) {
+                final Button buttonToMove = leftButtons[selectedLeftButton];
+                final Button button_newCoordsSource = leftButtons[currentMoveToIndex];
+                final RelativeLayout.LayoutParams btnToMoveLP = (RelativeLayout.LayoutParams)buttonToMove.getLayoutParams();
+                final RelativeLayout.LayoutParams btnCoordsSrcLP = (RelativeLayout.LayoutParams)button_newCoordsSource.getLayoutParams();
+                final int srcValue = btnToMoveLP.topMargin;
+                final int dstValue = btnCoordsSrcLP.topMargin;
+                ObjectAnimator animator = ObjectAnimator.ofInt(buttonToMove, "topMargin", srcValue, dstValue);
+                animator.setDuration(1000);
+                animator.setInterpolator(new DecelerateInterpolator());
+                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                        btnToMoveLP.topMargin = (Integer) valueAnimator.getAnimatedValue();
+                        buttonToMove.setLayoutParams(btnToMoveLP);
+                    }
+                });
+                animators.add(animator);
+
+
+            }
+            else {
+                //only alpha animation / animation switch would be here.
+            }
+
+            //Animate right button to new position if needed
+            if (selectedRightButton != currentMoveToIndex) {
+
+            }
+            else {
+                //only alpha animation / animation switch would be here.
+            }
+
+            currentMoveToIndex++; //increase locked/linked buttons count.
 
             animSet.playTogether(animators);
+            animSet.start();
+            selectedLeftButton = selectedRightButton = -1;
         }
     }
 
