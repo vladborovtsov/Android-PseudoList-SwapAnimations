@@ -19,6 +19,13 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    private int currentMoveToIndex = 0;
+    private int selectedLeftButton = -1;
+    private int selectedRightButton = -1;
+
+    final Button[] leftButtons = new Button[4];
+    final Button[] rightButtons = new Button[4];
+
     private RelativeLayout layout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +40,8 @@ public class MainActivity extends AppCompatActivity {
         final int LeftButtonWidth = 100 * (int)dp;
         final int RightButtonWidth = 200 * (int)dp;
 
-        final Button[] leftButtons = new Button[4];
-        final Button[] rightButtons = new Button[4];
+
+
 
         layout.post(new Runnable() {
             @Override
@@ -53,6 +60,13 @@ public class MainActivity extends AppCompatActivity {
                     btn.setLayoutParams(params);
                     layout.addView(btn);
                     leftButtons[i] = btn;
+                    btn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            clickedLeftButton((Button)view);
+                        }
+                    });
+                    btn.setBackgroundResource(R.drawable.button);
 
                     Button rightBtn = new Button(mainActivityPointer());
                     rightBtn.setText(String.valueOf(i*2));
@@ -63,15 +77,62 @@ public class MainActivity extends AppCompatActivity {
                     paramsRight.width = RightButtonWidth;
                     rightBtn.setLayoutParams(paramsRight);
                     layout.addView(rightBtn);
-
+                    rightButtons[i] = rightBtn;
+                    rightBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            clickedRightButton((Button)view);
+                        }
+                    });
+                    rightBtn.setBackgroundResource(R.drawable.button);
                 }
 
             }
         });
+    }
 
+    private void clickedLeftButton(Button button) {
+        selectedLeftButton = -1;
+        button.setSelected(!button.isSelected());
+        int i = 0;
+        for (Button btn: leftButtons) {
+            if (btn != button) {
+                btn.setSelected(false);
+            }
+            else {
+                if (button.isSelected()) {
+                    selectedLeftButton = i;
+                }
+            }
+            i++;
+        }
+        checkConnection();
+    }
 
+    private void clickedRightButton(Button button) {
+        selectedRightButton = -1;
+        button.setSelected(!button.isSelected());
+        int i = 0;
+        for (Button btn: rightButtons) {
+            if (btn != button) {
+                btn.setSelected(false);
+            }
+            else {
+                if (button.isSelected()) {
+                    selectedRightButton = i;
+                }
+            }
+            i++;
+        }
+        checkConnection();
+    }
 
-
+    private void checkConnection() {
+        if (selectedLeftButton != -1 && selectedRightButton != -1) {
+            leftButtons[selectedLeftButton].setVisibility(View.INVISIBLE);
+            rightButtons[selectedRightButton].setVisibility(View.INVISIBLE);
+            selectedLeftButton = selectedRightButton = -1;
+        }
     }
 
 }
