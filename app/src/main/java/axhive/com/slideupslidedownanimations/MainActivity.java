@@ -1,5 +1,8 @@
 package axhive.com.slideupslidedownanimations;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,10 +11,15 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -129,9 +137,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkConnection() {
         if (selectedLeftButton != -1 && selectedRightButton != -1) {
-            leftButtons[selectedLeftButton].setVisibility(View.INVISIBLE);
-            rightButtons[selectedRightButton].setVisibility(View.INVISIBLE);
+            leftButtons[selectedLeftButton].setBackgroundResource(R.drawable.button_locked);
+            rightButtons[selectedRightButton].setBackgroundResource(R.drawable.button_locked);
             selectedLeftButton = selectedRightButton = -1;
+
+            Collection<Animator> animators = new ArrayList<>();
+            AnimatorSet animSet = new AnimatorSet();
+
+            ObjectAnimator obja = new ObjectAnimator();
+            ObjectAnimator objb = new ObjectAnimator();
+
+            animSet.playTogether(animators);
         }
     }
 
